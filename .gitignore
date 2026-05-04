@@ -28,3 +28,6 @@ server.log
 # OS files
 .DS_Store
 Thumbs.db
+
+# Plan files
+0426需求迭代
