@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+
+# Configuration (contains API keys)
+config.json
+
+# User data
+data/
+videos.json
+favorites.json
+
+# Generated files
+public/thumbnails/
+
+# User video files (large, not for repo)
+public/videos/*.mp4
+public/videos/*.avi
+public/videos/*.mkv
+public/videos/*.mov
+public/videos/*.wmv
+public/videos/*.flv
+public/videos/*.webm
+
+# Logs
+*.log
+server.log
+
+# OS files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>我的收藏</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="favorites-body">
+    <div class="favorites-container">
+        <!-- 顶部导航 -->
+        <header class="favorites-header">
+            <button class="back-btn" onclick="goBack()">←</button>
+            <h1>我的收藏</h1>
+            <span></span>
+        </header>
+
+        <!-- 收藏列表 -->
+        <div class="favorites-list" id="favoritesList">
+            <div class="empty-state" id="emptyState">
+                <span class="empty-icon">❤️</span>
+                <p>还没有收藏任何视频</p>
+                <p class="empty-hint">在播放页面点击心形按钮收藏</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/favorites.js"></script>
+</body>
+</html>

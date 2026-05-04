@@ -1,0 +1,7 @@
+{
+  "doubaoApiKey": "你的豆包API Key",
+  "doubaoApiUrl": "https://ark.cn-beijing.volces.com/api/v3",
+  "chatModel": "doubao-seed-2-0-pro-260215",
+  "ttsModel": "",
+  "serverPort": 3000
+}

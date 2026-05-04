@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>历史记录</title>
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="icon" type="image/webp" href="/images/doubao.webp">
+    <link rel="stylesheet" href="/css/style.css">
+    <style>
+        .history-page {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--chat-bg);
+        }
+        .history-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+            padding-bottom: 80px;
+            -webkit-overflow-scrolling: touch;
+        }
+        .history-date {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin: 16px 0 8px 0;
+            padding-left: 4px;
+        }
+        .history-item {
+            background: var(--bg-color);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        .history-item:active {
+            transform: scale(0.98);
+        }
+        .history-user {
+            font-size: 15px;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+        .history-user::before {
+            content: '👤 ';
+        }
+        .history-ai {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .history-ai::before {
+            content: '';
+            width: 20px;
+            height: 20px;
+            background: url('/images/doubao.webp') center/cover no-repeat;
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+        .history-videos {
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        .history-video-tag {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            user-select: none;
+        }
+        .history-video-tag:active {
+            opacity: 0.8;
+            transform: scale(0.95);
+        }
+        .history-video-tag::before {
+            content: '🎬';
+        }
+        .history-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+        .clear-all-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 16px;
+            right: 16px;
+            width: auto;
+            height: 44px;
+            background: #FFF1F0;
+            border: 1px solid #FFCCC7;
+            border-radius: 22px;
+            color: #FF4D4F;
+            font-size: 15px;
+            cursor: pointer;
+        }
+        .clear-all-btn:active {
+            background: #FFCCC7;
+        }
+        .loading-more {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body class="settings-body">
+    <div class="settings-container history-page">
+        <!-- 顶部导航 -->
+        <header class="settings-header">
+            <button class="icon-btn" onclick="history.back()">←</button>
+            <h1>历史记录</h1>
+            <div style="width: 36px;"></div>
+        </header>
+
+        <!-- 历史列表 -->
+        <div class="history-list" id="historyList">
+            <div class="loading">加载中...</div>
+        </div>
+
+        <!-- 清空按钮 -->
+        <button class="clear-all-btn" id="clearAllBtn" onclick="clearAllHistory()">清空全部历史记录</button>
+    </div>
+
+    <script>
+        let currentVideos = [];
+        let currentVideoIndex = 0;
+
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', loadHistory);
+
+        // 加载历史记录
+        async function loadHistory() {
+            try {
+                const res = await fetch('/api/history?limit=50');
+                const data = await res.json();
+                
+                const list = document.getElementById('historyList');
+                
+                if (data.list.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📜</div>
+                            <p>暂无历史记录</p>
+                            <p class="empty-hint">和豆包对话后会自动保存</p>
+                        </div>
+                    `;
+                    document.getElementById('clearAllBtn').style.display = 'none';
+                    return;
+                }
+
+                // 按日期分组
+                const grouped = {};
+                data.list.forEach(item => {
+                    const date = new Date(item.createdAt);
+                    const dateKey = date.toLocaleDateString('zh-CN', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                    if (!grouped[dateKey]) {
+                        grouped[dateKey] = [];
+                    }
+                    grouped[dateKey].push(item);
+                });
+
+                // 渲染
+                let html = '';
+                for (const [date, items] of Object.entries(grouped)) {
+                    html += `<div class="history-date">📅 ${date}</div>`;
+                    items.forEach(item => {
+                        const time = new Date(item.createdAt).toLocaleTimeString('zh-CN', { 
+                            hour: '2-digit', 
+                            minute: '2-digit' 
+                        });
+                        const aiReply = item.aiReply || '';
+                        const videos = item.videos || [];
+                        
+                        let videosHtml = '';
+                        if (videos.length > 0) {
+                            videosHtml = `<div class="history-videos">${videos.map((v, i) => 
+                                `<div class="history-video-tag" data-history-index="${data.list.indexOf(item)}" data-video-index="${i}">${escapeHtml(v.name || v.title)}</div>`
+                            ).join('')}</div>`;
+                        }
+
+                        html += `
+                            <div class="history-item" onclick="showDetail(${data.list.indexOf(item)})">
+                                <div class="history-user">${escapeHtml(item.userMessage)}</div>
+                                <div class="history-ai">${escapeHtml(aiReply)}</div>
+                                ${videosHtml}
+                                <div class="history-time">${time}</div>
+                            </div>
+                        `;
+                    });
+                }
+
+                list.innerHTML = html;
+                
+                // 保存完整数据供播放使用
+                window.allHistory = data.list;
+                
+            } catch (error) {
+                document.getElementById('historyList').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">❌</div>
+                        <p>加载失败</p>
+                        <p class="empty-hint">${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // 显示详情/播放视频
+        async function showDetail(index) {
+            const item = window.allHistory[index];
+            if (!item) return;
+
+            // 如果有视频，自动播放第一个
+            if (item.videos && item.videos.length > 0) {
+                await playVideoByHistory(index, 0);
+            }
+        }
+
+        // 播放历史中的视频
+        async function playVideoByHistory(historyIndex, videoIndex) {
+            const item = window.allHistory[historyIndex];
+            const video = item.videos[videoIndex];
+            if (!video) return;
+
+            try {
+                const res = await fetch(`/api/video-by-filename?filename=${encodeURIComponent(video.filename)}`);
+                const fullVideo = await res.json();
+                
+                if (fullVideo.error) {
+                    showToast(fullVideo.error);
+                    return;
+                }
+                
+                // 保存到sessionStorage
+                sessionStorage.setItem('currentVideos', JSON.stringify([fullVideo]));
+                sessionStorage.setItem('currentVideoIndex', '0');
+                location.href = '/player';
+            } catch (e) {
+                showToast('获取视频失败');
+            }
+        }
+
+        // 清空全部历史
+        async function clearAllHistory() {
+            if (!confirm('确定要清空全部历史记录吗？')) {
+                return;
+            }
+
+            try {
+                await fetch('/api/history', { method: 'DELETE' });
+                showToast('已清空');
+                loadHistory();
+            } catch (error) {
+                showToast('清空失败');
+            }
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 显示提示
+        function showToast(message) {
+            const existing = document.querySelector('.toast');
+            if (existing) existing.remove();
+
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // 事件委托：处理视频卡片点击
+        document.addEventListener('click', (e) => {
+            const videoTag = e.target.closest('.history-video-tag');
+            if (videoTag) {
+                e.stopPropagation();
+                const historyIndex = parseInt(videoTag.dataset.historyIndex);
+                const videoIndex = parseInt(videoTag.dataset.videoIndex);
+                playVideoByHistory(historyIndex, videoIndex);
+            }
+        });
+    </script>
+</body>
+</html>

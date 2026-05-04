@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>设置</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+<body class="settings-body">
+    <div class="settings-container">
+        <!-- 顶部导航 -->
+        <header class="settings-header">
+            <button class="back-btn" onclick="goBack()">←</button>
+            <h1>设置</h1>
+            <span></span>
+        </header>
+
+        <!-- 设置表单 -->
+        <div class="settings-form">
+            <div class="form-group">
+                <label>🔑 豆包API Key</label>
+                <input type="password" id="apiKey" placeholder="请输入API Key" />
+                <span class="hint">从豆包开放平台获取</span>
+            </div>
+
+            <div class="form-group">
+                <label>🌐 API 地址</label>
+                <input type="text" id="apiUrl" placeholder="https://ark.cn-beijing.volces.com/api/v3" />
+                <span class="hint">豆包API服务端点</span>
+            </div>
+
+            <div class="form-group">
+                <label>💬 对话模型</label>
+                <input type="text" id="chatModel" placeholder="doubao-pro-16k" />
+            </div>
+
+            <div class="form-group">
+                <label>🔊 语音模型</label>
+                <input type="text" id="ttsModel" placeholder="ebvoino" />
+            </div>
+
+            <div class="form-group">
+                <label>🔌 服务器端口</label>
+                <input type="number" id="serverPort" placeholder="3000" />
+            </div>
+
+            <div class="form-actions">
+                <button class="save-btn" onclick="saveConfig()">保存配置</button>
+                <button class="reset-btn" onclick="resetConfig()">重置默认</button>
+            </div>
+        </div>
+
+        <!-- 版本信息 -->
+        <div class="version-info">
+            <p>SonAgent v1.0.0</p>
+            <p>AI聊天助手 - 类似豆包</p>
+        </div>
+    </div>
+
+    <script src="/js/settings.js"></script>
+</body>
+</html>

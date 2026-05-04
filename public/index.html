@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>豆包</title>
+    
+    <!-- 桌面快捷方式图标 -->
+    <link rel="icon" type="image/webp" href="/images/doubao.webp">
+    <link rel="icon" sizes="192x192" href="/images/doubao.webp">
+    <meta name="apple-touch-icon" content="/images/doubao.webp">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="豆包">
+    <link rel="apple-touch-icon-precomposed" href="/images/doubao.webp">
+    
+    <!-- 全屏模式 -->
+    <meta name="theme-color" content="#2979FF">
+    
+    <link rel="stylesheet" href="/css/style.css">
+    
+    <!-- Markdown解析库 -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+    <div class="app">
+        <!-- 顶部导航 -->
+        <header class="header">
+            <div class="header-left">
+                <span class="logo-icon" onclick="location.href='/history'" title="聊天历史">☰</span>
+            </div>
+            <h1 class="header-title">豆包</h1>
+            <div class="header-right">
+                <button class="icon-btn tts-btn" id="ttsBtn" onclick="toggleTTS()">🔊</button>
+                <button class="icon-btn" id="fontSizeBtn" onclick="toggleFontSizeMenu()" title="字体大小">🔤</button>
+                <button class="icon-btn" onclick="location.href='/favorites'"><img src="/images/doubao.webp" alt="" width="24" height="24" style="border-radius:50%"></button>
+                <button class="icon-btn" onclick="location.href='/settings'">⚙️</button>
+            </div>
+        </header>
+
+        <!-- 字体大小调整菜单 -->
+        <div class="font-size-menu" id="fontSizeMenu">
+            <div class="font-size-label">字体大小</div>
+            <div class="font-size-buttons">
+                <button class="font-btn" onclick="setFontSize('small')" id="fontSmall">小</button>
+                <button class="font-btn active" onclick="setFontSize('medium')" id="fontMedium">中</button>
+                <button class="font-btn" onclick="setFontSize('large')" id="fontLarge">大</button>
+                <button class="font-btn" onclick="setFontSize('xlarge')" id="fontXlarge">特大</button>
+            </div>
+        </div>
+
+        <!-- 提示文字 -->
+        <div class="ai-tip">
+            <span>内容由AI生成，仅供参考</span>
+        </div>
+
+        <!-- iOS Safari 语音授权提示 -->
+        <div class="safari-tip" id="safariTip" style="display:none">
+            <span>👆 首次使用请先点击语音按钮授权麦克风</span>
+        </div>
+
+        <!-- 聊天消息区域 -->
+        <div class="chat-container" id="chatContainer">
+            <!-- 欢迎页 -->
+            <div class="welcome-screen" id="welcomeScreen">
+                <div class="welcome-icon"><img src="/images/doubao.webp" alt="" width="60" height="60"></div>
+                <div class="welcome-title">我是豆包，你的AI助手</div>
+                <div class="welcome-desc">试试对我说"播放周星驰电影"</div>
+                
+                <!-- 提示词推荐区域 -->
+                <div class="suggestion-section" id="suggestionSection">
+                    <div class="suggestion-list" id="suggestionList">
+                        <!-- 提示词按钮由JS动态生成 -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部输入区域 -->
+        <div class="input-area">
+            <!-- 快捷功能按钮 -->
+            <div class="quick-actions">
+                <button class="quick-btn">⚡快速</button>
+                <button class="quick-btn">📞</button>
+                <button class="quick-btn">✨AI创作</button>
+                <button class="quick-btn">📹视频通话</button>
+            </div>
+            
+            <!-- 输入框区域 - 深色胶囊风格 -->
+            <div class="input-row" id="inputRow">
+                <!-- 相机按钮 -->
+                <button class="input-btn camera-btn" id="cameraBtn" title="拍照/选视频">📷</button>
+                
+                <!-- 中间区域：按住说话文字 或 输入框 -->
+                <div class="input-center" id="inputCenter">
+                    <!-- 默认状态：按住说话 -->
+                    <div class="input-hint" id="inputHint">按住说话</div>
+                    <!-- 打字状态：输入框 -->
+                    <input type="text" class="text-input" id="textInput" placeholder="" style="display:none" />
+                </div>
+                
+                <!-- 右侧按钮区域 -->
+                <div class="input-right" id="inputRight">
+                    <!-- 键盘按钮（默认状态） -->
+                    <button class="input-btn keyboard-btn" id="keyboardBtn" title="切换打字">⌨️</button>
+                    <!-- 音量按钮（打字状态） -->
+                    <button class="input-btn voice-btn" id="voiceSwitchBtn" title="退出打字" style="display:none">🔊</button>
+                    <!-- 加号按钮 -->
+                    <button class="input-btn add-btn" id="addBtn" title="更多功能">＋</button>
+                    <!-- 发送按钮（有内容时显示） -->
+                    <button class="input-btn send-btn" id="sendBtn" title="发送" style="display:none">➤</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 视频卡片弹窗 -->
+    <div class="video-modal" id="videoModal">
+        <div class="video-modal-content">
+            <div class="video-modal-header">
+                <span>相关视频</span>
+                <button class="close-modal" onclick="closeVideoModal()">✕</button>
+            </div>
+            <div class="video-card-grid" id="videoCardGrid">
+                <!-- 视频卡片动态生成 -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/chat.js"></script>
+</body>
+</html>
